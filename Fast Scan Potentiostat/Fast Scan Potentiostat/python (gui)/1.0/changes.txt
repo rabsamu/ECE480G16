@@ -1,0 +1,5 @@
+Just ported over what was the newest version of the slow scan multichannel code for the fast scan system with all the added
+functionality.
+
+6/10/2024
+Nathan Grimmer

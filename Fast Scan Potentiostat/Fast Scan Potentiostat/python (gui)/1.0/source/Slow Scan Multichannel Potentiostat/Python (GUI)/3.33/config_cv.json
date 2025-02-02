@@ -1,0 +1,14 @@
+{
+  "voltage_to_hold_min": "0",
+  "voltage_to_hold_max": "5",
+  "lower_voltage_limit_min": "-4",
+  "lower_voltage_limit_max": "4",
+  "upper_voltage_limit_min": "-4",
+  "upper_voltage_limit_max": "4",
+  "scan_rate_min": "0.01",
+  "scan_rate_max": "1",
+  "number_of_segments_min": "1",
+  "number_of_segments_max": "100",
+  "sampling_rate_min": "10",
+  "sampling_rate_max": "100"
+}
