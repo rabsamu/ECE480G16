@@ -90,27 +90,16 @@ void directionControl() {
 
 // This function lets you control speed of the motors
 void speedCycle() {
-  // Turn on motors
-//  digitalWrite(in1, LOW);
-//  digitalWrite(in2, HIGH);
-//  digitalWrite(in3, LOW);
-//  digitalWrite(in4, HIGH);
   
   // Accelerate from zero to maximum speed
-  for (int i = 100; i < 256; i++) {
+  for (int i = 50; i < 100; i++) {
     speedControl(1, i);
     delay(50);
   }
   
   // Decelerate from maximum speed to zero
-  for (int i = 255; i >= 100; --i) {
+  for (int i = 100; i >= 50; --i) {
     speedControl(1, i);
     delay(50);
   }
-  
-//  // Now turn off motors
-//  digitalWrite(in1, LOW);
-//  digitalWrite(in2, LOW);
-//  digitalWrite(in3, LOW);
-//  digitalWrite(in4, LOW);
 }
