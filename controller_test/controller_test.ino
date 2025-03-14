@@ -1,16 +1,16 @@
 #define HWSERIAL Serial1
 
 // Motor A connections
-int enA = 9;
-int in1 = 8;
-int in2 = 7;
+int enA = 14;
+int in1 = 15;
+int in2 = 16;
 // Motor B connections
-int enB = 3;
-int in3 = 5;
-int in4 = 4;
+int enB = 19;
+int in3 = 17;
+int in4 = 18;
 
-int directionA = 0;
-int directionB = 0;
+int directionA = 1;
+int directionB = 1;
 
 
 void setup() {
@@ -29,22 +29,25 @@ void setup() {
   digitalWrite(in2, 0);
   digitalWrite(in3, 1);
   digitalWrite(in4, 0);
+
+  HWSERIAL.begin(9600);
 }
 
 void loop() {
-  if(HWSERIAL.available()) {
+  if(HWSERIAL.available() > 0) {
     char msg = HWSERIAL.read();
+    Serial.println(msg);
     switch(msg) {
-      case '1':
+      case 49:
         gotoState1();
         break;
-      case '2':
+      case 50:
         gotoState2();
         break;
-      case '3':
+      case 51:
         gotoState3();
         break;
-      case '4':
+      case 52:
         toggleDirection(1);
         toggleDirection(2);
         break;
@@ -54,13 +57,13 @@ void loop() {
 }
 
 void gotoState1() {
-  speedControl(1, 80);
+  speedControl(1, 95);
   speedControl(2, 0);
 }
 
 void gotoState2() {
   speedControl(1, 0);
-  speedControl(2, 80);
+  speedControl(2, 95);
 }
 
 void gotoState3() {
@@ -68,8 +71,8 @@ void gotoState3() {
   speedControl(2, 0);
 }
 
-void speedControl(int motor, int percent) {
-  int scaledVal = percent / 100 * 255;
+void speedControl(int motor, float percent) {
+  int scaledVal = (int) (percent / 100 * 255);
   if(motor == 1) {
     analogWrite(enA, scaledVal);
   } else {
