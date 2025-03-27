@@ -3,6 +3,7 @@
 #include <teensy_clock.h>
 
 // Constant definitions
+#define HWSERIAL Serial1
 #define DAC_CS 10
 #define ADC_CS 9
 #define MUX1_LINE 8
@@ -11,62 +12,18 @@
 #define MUX2_LINEB 6 
 #define MUX2_LINEC 5
 
+// FIXME
+#define FILTER_PUMP 0
+#define SOLUTION_PUMP 0
+#define BUFFER_PUMP 0
+
 int OVERSAMPLING = 0;
 
 // ADC instantiation
 AD4000 adc(ADC_CS);
-float arg_1;
-float arg_2;
-float arg_3;
-float arg_4;
-float arg_5;
-float arg_6;
-float arg_7;
-float arg_8;
-float arg_9;
-float arg_10;
-float arg_11;
-float arg_12;
-float arg_13;
-float arg_14;
-float arg_15;
 float args[16];
 
 //      ***Variables***
-
-//  old
-int gain_value;
-float v_step;
-float low_voltage;
-float high_voltage;
-int segments;
-int times_to_sample; // case 5
-float sample_rate; // case 6
-int technique; // case 1
-
-//  dpasv/dpv
-int gain; // case 2     (ohms) - Gain
-float initial_potential;
-float final_potential;
-float increment_potential;
-float pulse_width;   // (s) - Potential pulse width
-float pulse_period;  // (s) - Potential pulse period or dropping time
-float amplitude;     // (V)- Potential pulse amplitude
-float quiet_time;    // (s) - Quiscent time before potential pulses begin
-float sample_width;  // (s) - Data sampling width
-float hold_time1; // (s)
-float hold_voltage1; // (V)
-float hold_time2; // (s)
-float hold_voltage2; // (V)
-
-//  cv
-int cv_sensitivity;
-int cv_sampling_rate;
-float cv_scan_rate;
-int cv_number_of_segments;
-float cv_lower_voltage_limit; // case 3 - arg_1
-float cv_upper_voltage_limit; // case 4
-
 typedef teensy_clock::time_point timePoint;
 typedef std::chrono::duration<float, std::micro> micros_f;
 
@@ -89,7 +46,7 @@ void setup() {
   //for cv, gonna find out if it breaks others
   digitalWriteFast(MUX1_LINE, HIGH); // Selects signal from MUX (ADG419) to be response (we're measuring response signal)
 
-  setVoltage(8192); // Set voltage to 0 V (instead of starting on -2.5V on startup, which could affect first time measurement)
+  setVoltage(0); // Set voltage to 0 V (instead of starting on -2.5V on startup, which could affect first time measurement)
 
   // ADC Setup
   adc.set_settings(false, false, false, true); //Enable status bits, span compression, high Z mode, turbo mode
@@ -97,11 +54,11 @@ void setup() {
   adc.read_register();
   Serial.println("ADC setup complete!");
   delay(100);
-} //Good I think
+}
 
 void loop() {
   bool got_message = false;
-  if (Serial.available() > 0) {
+  if (HWSERIAL.available() > 0) {
     delay(1000);
 
     getMessage();
@@ -137,7 +94,7 @@ void loop() {
 void getMessage() {
   char sz[200];
   char buf[sizeof(sz)];
-  String serialResponse = Serial.readStringUntil('\r\n');
+  String serialResponse = HWSERIAL.readStringUntil('\r\n');
   serialResponse.toCharArray(buf, sizeof(buf));
   char *p = buf;
   char *str;
@@ -146,14 +103,6 @@ void getMessage() {
     iterator_count += 1;
     args[iterator_count] = atof(str);
   }
-}
-
-int voltageToCode(float v) {
-  return 0;
-}
-
-int voltageToBytes(float v) {
-  return 0;
 }
 
 void setVoltage(float voltage) {
@@ -228,10 +177,6 @@ void setGain(int resistanceGain)
   }
 }
 
-float codeToVoltage(int code) {
-  return ((float)code / 8191.5 - 1) * 2.5;
-}
-
 float measureCurrent(float pulse, float sample_width, float gain_val) {
   float total = 0;
   float how_many = 0;
@@ -254,4 +199,21 @@ float measureCurrent(float pulse, float sample_width, float gain_val) {
     }
   }
   return total / how_many;
+}
+
+void setFilter(int percent) {
+  setMotor(FILTER_PUMP, percent);
+}
+
+void setSolution(int percent) {
+  setMotor(SOLUTION_PUMP, percent);
+}
+
+void setBuffer(int percent) {
+  setMotor(BUFFER_PUMP, percent);
+}
+
+void setMotor(int pinNum, int percent) {
+  int scaledVal = percent / 100 * 255;
+  analogWrite(pinNum, scaledVal);
 }

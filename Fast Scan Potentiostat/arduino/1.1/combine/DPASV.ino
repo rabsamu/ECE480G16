@@ -11,7 +11,6 @@ void DPASV(float args[16]) {
   float hold_voltage1 = args[10];
   float hold_time2 = args[11];
   float hold_voltage2 = args[12];
-  int oversampling = (int) args[13];
     
   int num_increments = floor((high_voltage - low_voltage) / increment_voltage);
   float current = 0;
