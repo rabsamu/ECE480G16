@@ -1,54 +1,55 @@
 
-void CV(float low_voltage, float high_voltage, int times_to_sample, int segments, float sample_rate, float v_step) 
-{
-  // Convert voltages to DAC codes
-  uint16_t low_voltage_code = (uint16_t)((low_voltage / 2.5 + 1) * 8191.5);
-  uint16_t high_voltage_code = (uint16_t)((high_voltage / 2.5 + 1) * 8191.5);
-  uint16_t current_voltage_code = low_voltage_code;
+void CV(float args[16]) {
+  float gain_val = args[1];
+  float low_voltage = args[2];
+  float high_voltage = args[3];
+  float increment_voltage = args[4];
+  int times_to_sample = (int) args[5];
+  float sample_rate = args[6];
+  float scan_rate = args[7];
+  int segments = args[8];
+  
   // Calculate the number of steps and time per step
-  // v_step = (v_step > 0.05) ? 0.05 : v_step;
-  // uint16_t voltage_increment_code = (uint16_t) map(v_step, 0, 5, 0, pow(2,14));
-  uint16_t voltage_increment_code = 1; // Use 1 or 2 based on feasibility
-  uint16_t total_steps = abs(high_voltage_code - low_voltage_code) / voltage_increment_code;
+  int voltage_increment_code = 1; // Use 1 or 2 based on feasibility
+  int total_steps = abs(high_voltage - low_voltage) / increment_voltage;
   unsigned long time_per_step = (unsigned long)(1000000.0 / (sample_rate * total_steps)); // Time per step in microseconds
   bool increment = true; // Flag to toggle between incrementing and decrementing
-  setVoltage(current_voltage_code);
-  adc.read_value();
+  
+  setVoltage(low_voltage);
+  float current_voltage = low_voltage;
   delay(100);
   unsigned long run_time = micros();
   for (int i = 0; i < segments; i++) {
 
-      while ((increment && current_voltage_code <= high_voltage_code) || 
-            (!increment && current_voltage_code >= low_voltage_code)) {
+      while ((increment && current_voltage <= high_voltage) || 
+            (!increment && current_voltage >= low_voltage)) {
           
           unsigned long start_time = micros();
-          setVoltage(current_voltage_code);
-          // delayMicroseconds(5);
+          setVoltage(current_voltage);
           uint32_t total = 0;
 
           for (int j = 0; j < times_to_sample; j++) {
-              total += adc.read_value();
+              total += readCurrent(gain_val);
           }
 
-          uint16_t measured_value = total / times_to_sample;
-          Serial.print(current_voltage_code);
+          uint16_t avg_current = total / times_to_sample;
+          Serial.print(current_voltage);
           Serial.print(',');
-          Serial.print(measured_value);
+          Serial.print(avg_current);
           Serial.print(',');
           Serial.println(micros()-run_time);
 
           // Change voltage code based on the increment flag
           if (increment) {
-              current_voltage_code += voltage_increment_code;
+              current_voltage += increment_voltage;
           } else {
-              current_voltage_code -= voltage_increment_code;
+              current_voltage -= increment_voltage;
           }
 
           // Wait for the remaining time in the step
-          if ((increment && current_voltage_code < high_voltage_code) || 
-            (!increment && current_voltage_code > low_voltage_code)){
-          while (micros() - start_time < time_per_step);
-            }
+          if ((increment && current_voltage < high_voltage) || (!increment && current_voltage > low_voltage)) {
+            while (micros() - start_time < time_per_step);
+          }
       }
 
       // Toggle the increment flag and decrement segments_left after each segment
@@ -56,5 +57,3 @@ void CV(float low_voltage, float high_voltage, int times_to_sample, int segments
   }
 
 }
-
-

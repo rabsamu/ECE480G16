@@ -30,6 +30,7 @@ float arg_12;
 float arg_13;
 float arg_14;
 float arg_15;
+float args[16];
 
 //      ***Variables***
 
@@ -103,114 +104,36 @@ void loop() {
   if (Serial.available() > 0) {
     delay(1000);
 
-
-
-    
     getMessage();
     got_message = true;
   }
-
-  // ASV
-  if (got_message && arg_1 == 1) {
+  if (got_message) {
     SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE1));
     digitalWriteFast(MUX1_LINE, HIGH); // Selects signal from MUX (ADG419) to be response (we're measuring response signal)
     delayMicroseconds(5);
-    // CV(cv_lower_voltage_limit, high_voltage, segments);
-    setGain(10000);
-    low_voltage = arg_2;
-    high_voltage = arg_3;
-    times_to_sample = arg_4;
-    hold_time1 = arg_5;
-    hold_voltage1 = arg_6;
-    hold_time2 = arg_7;
-    hold_voltage2 = arg_8;
-    gain = arg_9;
-    sample_rate = arg_10;
-    setGain(gain);
+    setGain(args[1]);
     delay(100);
+    
+    switch((int)args[0]) {
+      case 1:
+        ASV(args);
+        break;
+      case 2:
+        DPASV(args);
+        break;
+      case 3:
+        DPV(args);
+        break;
+      case 4:
+        CV(args);
+        break;
+    }
 
-    ASV(low_voltage,high_voltage,times_to_sample,sample_rate,hold_time1,hold_voltage1,hold_time2,hold_voltage2);
     delay(100);
     Serial.println("Done!");
     SPI.endTransaction();
   }
-
-  // DPASV
-  if (got_message && arg_1 == 2) {
-    SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE1));
-    digitalWriteFast(MUX1_LINE, HIGH);
-    delayMicroseconds(5);
-    gain = arg_2;
-    initial_potential = arg_3;
-    final_potential = arg_4;
-    increment_potential = arg_5;
-    pulse_width = arg_6;
-    pulse_period = arg_7;
-    amplitude = arg_8;
-    quiet_time = arg_9;
-    sample_width = arg_10;
-    hold_time1 = arg_11;
-    hold_voltage1 = arg_12;
-    hold_time2 = arg_13;
-    hold_voltage2 = arg_14;
-    OVERSAMPLING = arg_15;
-    setGain(gain);
-    delay(100);
-    DPASV(initial_potential, final_potential, increment_potential, pulse_width, pulse_period, amplitude, quiet_time, sample_width,hold_time1,hold_voltage1,hold_time2,hold_voltage2);
-    delay(100);
-    Serial.println("Done!");
-    SPI.endTransaction();
-    setVoltage(8192);
-  }
-
-  // DPV
-  if (got_message && arg_1 == 3) {
-    SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE1));
-    digitalWriteFast(MUX1_LINE, HIGH);
-    delayMicroseconds(5);
-    gain = arg_2;
-    initial_potential = arg_3;
-    final_potential = arg_4;
-    increment_potential = arg_5;
-    pulse_width = arg_6;
-    pulse_period = arg_7;
-    amplitude = arg_8;
-    quiet_time = arg_9;
-    sample_width = arg_10;
-    OVERSAMPLING = arg_11;
-    setGain(gain);
-    delay(100);
-    DPV(initial_potential, final_potential, increment_potential, pulse_width, pulse_period, amplitude, quiet_time, sample_width);
-    delay(100);
-    Serial.println("Done!");
-    SPI.endTransaction();
-    setVoltage(8192);
-  }
-
-  // FSCV
-  if (got_message && arg_1 == 4) {
-    SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE1));
-    digitalWriteFast(MUX1_LINE, HIGH); // Selects signal from MUX (ADG419) to be response (we're measuring response signal)
-    delayMicroseconds(5);
-    // CV(cv_lower_voltage_limit, cv_upper_voltage_limit, cv_number_of_segments);
-    setGain(10000);
-    cv_lower_voltage_limit = arg_2;
-    cv_upper_voltage_limit = arg_3;
-    cv_number_of_segments = arg_4;
-    cv_sensitivity = arg_5;
-    cv_sampling_rate = arg_6;
-    cv_scan_rate = arg_7;
-    v_step = arg_8;
-    setGain(cv_sensitivity);
-    delay(100);
-    CV(cv_lower_voltage_limit,cv_upper_voltage_limit,cv_sampling_rate,cv_number_of_segments,cv_scan_rate,v_step);
-    delay(100);
-    Serial.println("Done!");
-    SPI.endTransaction();
-  } 
-
-} // figure out what the different argument_1 values should be for if statements
-
+} 
 void getMessage() {
   char sz[200];
   char buf[sizeof(sz)];
@@ -221,68 +144,27 @@ void getMessage() {
   int iterator_count = 0;
   while ((str = strtok_r(p, ", ", &p)) != NULL) {
     iterator_count += 1;
-    switch (iterator_count) {
-      case 1:
-        arg_1 = atof(str);
-        break;
-      case 2:
-        arg_2 = atof(str);
-        break;
-      case 3:
-        arg_3 = atof(str);
-        break;
-      case 4:
-        arg_4 = atof(str);
-        break;
-      case 5:
-        arg_5 = atof(str);
-        break;
-      case 6:
-        arg_6 = atof(str);
-        break;
-      case 7:
-        arg_7 = atof(str);
-        break;
-      case 8:
-        arg_8 = atof(str);
-        break;
-      case 9:
-        arg_9 = atof(str);
-        break;
-      case 10:
-        arg_10 = atof(str);
-        break;
-      case 11:
-        arg_11 = atof(str);
-        break;
-      case 12:
-        arg_12 = atof(str);
-        break;
-      case 13:
-        arg_13 = atof(str);
-        break;
-      case 14:
-        arg_14 = atof(str);
-        break;
-      case 15:
-        arg_15 = atof(str);
-        break;
-    }
+    args[iterator_count] = atof(str);
   }
 }
 
-double voltageToBytes(float voltage) {
-  return map(voltage, 0, 5, 0, pow(2, 14) - 1);
+int voltageToCode(float v) {
+  return 0;
 }
 
-void setVoltage(int DacValue) {
+int voltageToBytes(float v) {
+  return 0;
+}
+
+void setVoltage(float voltage) {
+  int dacValue = int(round((voltage / 2.5 + 1) * 8191.5));
   digitalWriteFast(DAC_CS, LOW);
-  SPI.transfer16(DacValue);
+  SPI.transfer16(dacValue);
   digitalWriteFast(DAC_CS, HIGH);
 }
 
-double calculateVoltage(float voltage) {
-  return map(voltage, -2.5, 2.5, 0, pow(2, 14) - 1);
+float readCurrent(float gain_val) {
+  return ((5 * (float)adc.read_value() / (1<<16-1)) - 2.5) * 2 / gain_val;
 }
 
 void setGain(int resistanceGain) 
@@ -346,7 +228,11 @@ void setGain(int resistanceGain)
   }
 }
 
-float measure(float pulse, float sample_width) {
+float codeToVoltage(int code) {
+  return ((float)code / 8191.5 - 1) * 2.5;
+}
+
+float measureCurrent(float pulse, float sample_width, float gain_val) {
   float total = 0;
   float how_many = 0;
   timePoint timeold = teensy_clock::now();
@@ -354,12 +240,13 @@ float measure(float pulse, float sample_width) {
   int time_for_measurements = pulse * 1000000 - sample_width * 1000000;
   int intervals = time_for_measurements / OVERSAMPLING;
   int next_measurement_time = sample_width * 1000000;
+  
   while (std::chrono::duration_cast<micros_f>(timenew - timeold).count() <= 1000000 * pulse) {
     timenew = teensy_clock::now();
     if (std::chrono::duration_cast<micros_f>(timenew - timeold).count() >= sample_width * 1000000) {
       if (std::chrono::duration_cast<micros_f>(timenew - timeold).count() >= next_measurement_time) {
         if (how_many <= OVERSAMPLING) {
-          total = total + adc.read_value();
+          total = total + readCurrent(gain_val);
           how_many++;
           next_measurement_time += intervals;
         }
