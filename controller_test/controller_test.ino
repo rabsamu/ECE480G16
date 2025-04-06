@@ -1,7 +1,7 @@
 #define HWSERIAL Serial1
 
 // Motor A connections
-int enA = 9;
+int enA = 14;
 int in1 = 8;
 int in2 = 7;
 // Motor B connections
@@ -25,18 +25,20 @@ void setup() {
   // Set motors to forwrd - Initial state
   digitalWrite(enA, 0);
   digitalWrite(enB, 0);
-  digitalWrite(in1, 1);
+  digitalWrite(in1, 0);
   digitalWrite(in2, 0);
-  digitalWrite(in3, 1);
+  digitalWrite(in3, 0);
   digitalWrite(in4, 0);
 }
 
 void loop() {
-  if(HWSERIAL.available()) {
-    char msg = HWSERIAL.read();
+  
+  if(Serial.available()) {
+    char msg = Serial.read();
     switch(msg) {
       case '1':
-        gotoState1();
+        blinkLight();
+//        gotoState1();
         break;
       case '2':
         gotoState2();
@@ -68,8 +70,14 @@ void gotoState3() {
   speedControl(2, 0);
 }
 
-void speedControl(int motor, int percent) {
-  int scaledVal = percent / 100 * 255;
+void blinkLight() {
+  digitalWrite(13, 1);
+  delay(4000);
+  digitalWrite(13, 0);
+}
+
+void speedControl(int motor, float percent) {
+  int scaledVal = (int) (percent / 100 * 255);
   if(motor == 1) {
     analogWrite(enA, scaledVal);
   } else {

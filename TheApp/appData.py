@@ -1,0 +1,3 @@
+class AppData:
+    configASV = []
+    configDPASV = []

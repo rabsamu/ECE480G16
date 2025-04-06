@@ -217,3 +217,11 @@ void setMotor(int pinNum, int percent) {
   int scaledVal = percent / 100 * 255;
   analogWrite(pinNum, scaledVal);
 }
+
+void openValve() {
+  digitalWrite(VALVE, 1);
+}
+
+void closeValve() {
+  digitalWrite(VALVE, 0);
+}

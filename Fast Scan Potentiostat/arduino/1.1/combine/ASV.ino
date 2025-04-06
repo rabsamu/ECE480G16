@@ -17,6 +17,14 @@ void ASV(float args[16]) {
   int total_steps = abs(high_voltage - low_voltage) / voltage_increment;
   unsigned long time_per_step = (unsigned long)(1000000.0 / (sample_rate * total_steps)); // Time per step in microseconds
   bool increment = true; // Flag to toggle between incrementing and decrementing
+
+  setFilter(80);
+  delay(10000);
+  setFilter(0);
+
+  openValve();
+  setSolution(80);
+  setBuffer(80);
   
   setVoltage(hold_voltage1);
   if (hold_time1 > 0) {
@@ -29,6 +37,10 @@ void ASV(float args[16]) {
     Serial.println("Holding at concentration voltage");
     delay(hold_time2 * 1000);
   }
+  closeValve();
+  delay(500);
+  setSolution(0);
+  setBuffer(0);
 
   setVoltage(low_voltage);
   float current_voltage = low_voltage;
@@ -51,5 +63,12 @@ void ASV(float args[16]) {
       while (micros() - start_time < time_per_step);
       current_voltage += voltage_increment;
   }
+
+  openValve();
+  setBuffer(80);
+  delay(5000);
+  setBuffer(0);
+  delay(2000);
+  closeValve();
 
 }

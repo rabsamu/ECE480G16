@@ -1,0 +1,70 @@
+<SettingsScreen>:
+    layout: layout
+    BoxLayout:
+        id: layout
+        title: "Settings"
+        orientation: "vertical"
+
+        mainContent: mainContent
+
+        # Top Bar
+        BoxLayout:
+            id: topBar
+            orientation: "horizontal"
+            size_hint: (1, 0.2)
+            Label:
+                text: "corner"
+                size_hint: (0.2, 1)
+            Label:
+                text: "Main Banner!"
+        
+        # Main Content
+        BoxLayout:
+            id: mainContent
+            orientation: "horizontal"
+
+            score_label: score_label
+            paramList: paramList
+
+            Label:
+                id: score_label
+                text:"Enter Parameters"
+                font_size:20
+
+            BoxLayout:
+                id: paramList
+                orientation: "vertical"
+                Label:
+                    text: "Params"
+
+            Button:
+                text:"Run Test!"
+                on_release: 
+                    app.settings.save_config()
+                    app.settings.unload()
+                    app.sm.current = 'results'
+                    app.results.start_process()
+
+
+        # Lower Bar
+        BoxLayout:
+            id: lowerBar
+            orientation: "horizontal"
+            words: words
+            size_hint: (1, 0.2)
+            pos_hint: {'bottom': 1}
+
+            Button:
+                text: "Back"
+                on_release:
+                    app.settings.unload()
+                    app.sm.current = 'home'
+
+            Button: 
+                text: "Read vals"
+                on_release:
+                    app.settings.print_vals()
+
+            Label:
+                id: words
+                text: "Here's a thing"
