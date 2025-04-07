@@ -2,6 +2,7 @@ from kivy.uix.screenmanager import Screen
 import pickle
 
 class HomeScreen(Screen):
+    
     INSTANCE = None
 
     def save_settings(self):

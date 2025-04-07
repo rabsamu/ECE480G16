@@ -5,10 +5,11 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 
 class SettingsScreen(Screen):
+    
     INSTANCE = None
     mode = ""
     test_param_dict = {
-        "asv" : ["voltage 1", "time 1", "voltage 2", "time 2"],
+        "asv" : ["gain", "low voltage", "times to sample", "time 1", "voltage 1", "time 2", "voltage 2", "sample rate"],
         "dpasv" : ["start voltage", "stop voltage", "voltage 1", "time 1", "voltage 2", "time 2"]
     } 
 
@@ -34,6 +35,18 @@ class SettingsScreen(Screen):
     def unload(self):
         self.layout.mainContent.paramList.clear_widgets()
 
+    def send_config(self):
+        try:
+            if(self.mode == "asv"):
+                message = "1,"
+                for i in range(len(self.INSTANCE.data.configASV) - 1):
+                    message += str(self.INSTANCE.data.configASV[i]) + ","
+                message += str(self.INSTANCE.data.configASV[-1]) + "\n"
+            
+            self.INSTANCE.bluetooth.BluetoothSend(message.encode())
+        except Exception as e:
+            self.layout.topBar.mytext.text = e
+
     def save_config(self):
         config = []
         for i in range(len(self.layout.mainContent.paramList.children)):
@@ -42,6 +55,6 @@ class SettingsScreen(Screen):
             if(len(row.children) == 2):
                 config.append((float)(row.children[0].text))
         if(self.mode == "asv"):
-            print(config)
             self.INSTANCE.data.configASV = config
+            
         

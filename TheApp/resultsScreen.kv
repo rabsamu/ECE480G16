@@ -1,49 +1,59 @@
-<HomeScreen>:
+<ResultsScreen>:
     layout: layout
     BoxLayout:
         id: layout
         orientation: "vertical"
+
+        topBar: topBar
         lowerBar: lowerBar
         mainContent: mainContent
         
+        # Top Bar
         BoxLayout:
             id: topBar
+            mytext:mytext
             orientation: "horizontal"
             size_hint: (1, 0.2)
             Label:
                 text: "corner"
                 size_hint: (0.2, 1)
             Label:
+                id: mytext
                 text: "Main Banner!"
+
         # Main Content
         BoxLayout:
             id: mainContent
-            orientation: "vertical"
+            orientation: "horizontal"
 
-            Button:
-                text: "ASV"
-                on_release:
-                    app.sm.current = 'settings'
-                    app.settings.load("asv")
-            Button:
-                text: "DP-ASV"
-                on_release:
-                    app.sm.current = 'settings'
-                    app.settings.load("dpasv")
+            #buttons: buttons
+            graph: graph
 
+            #BoxLayout:
+            #    id: buttons
+            #    orientation: "vertical"
+
+                
+
+            Image:
+                id: graph
+                source: 'graph.png'
+
+        # Lower Bar
         BoxLayout:
             id: lowerBar
             orientation: "horizontal"
+            words: words
             size_hint: (1, 0.2)
             pos_hint: {'bottom': 1}
 
             Button:
-                text: "Save settings"
+                text: "Back to menu"
                 on_release:
-                    app.menu.save_settings()
+                    app.results.stop_process()
+                    app.sm.current = "home"
 
-            Button:
-                text: "Load settings"
-                on_release:
-                    app.menu.load_settings()
+            Label:
+                id: words
+                text: "Here's a thing"
 
