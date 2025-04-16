@@ -1,11 +1,15 @@
 
 void CV(float args[16]) {
+  for(int i = 1; i < 9; i++) {
+    Serial.print("value: ");
+    Serial.println(args[i]);
+  }
   float gain_val = args[1];
-  float low_voltage = args[2];
-  float high_voltage = args[3];
-  float increment_voltage = args[4];
-  int times_to_sample = (int) args[5];
-  float sample_rate = args[6];
+  float low_voltage = args[2]; // 0.5V
+  float high_voltage = args[3]; // 0.5V
+  float increment_voltage = args[4]; // 0.1V
+  int times_to_sample = (int) args[5]; // 100
+  float sample_rate = args[6]; // 
   float scan_rate = args[7];
   int segments = args[8];
   
@@ -18,6 +22,16 @@ void CV(float args[16]) {
   setVoltage(low_voltage);
   float current_voltage = low_voltage;
   delay(100);
+
+  openValve();
+  setSolution(75);
+  setBuffer(75);
+  delay(5000);
+
+  closeValve();
+  setSolution(0);
+  setBuffer(0);
+  
   unsigned long run_time = micros();
   for (int i = 0; i < segments; i++) {
 
@@ -26,18 +40,25 @@ void CV(float args[16]) {
           
           unsigned long start_time = micros();
           setVoltage(current_voltage);
-          uint32_t total = 0;
+          float total = 0;
 
           for (int j = 0; j < times_to_sample; j++) {
-              total += readCurrent(gain_val);
+              float reading = readCurrent(gain_val);
+              if(reading == 0xFFFFFFFF) return;
+              total += reading;
+              
           }
 
-          uint16_t avg_current = total / times_to_sample;
+          float avg_current = total / times_to_sample;
+          HWSERIAL.print(current_voltage);
+          HWSERIAL.print(',');
+          HWSERIAL.print(avg_current, 12);
+          HWSERIAL.print("\n");
           Serial.print(current_voltage);
           Serial.print(',');
-          Serial.print(avg_current);
-          Serial.print(',');
-          Serial.println(micros()-run_time);
+          Serial.print(avg_current, 12);
+          Serial.print("\n");
+//          Serial.println(micros()-run_time);
 
           // Change voltage code based on the increment flag
           if (increment) {
@@ -48,12 +69,12 @@ void CV(float args[16]) {
 
           // Wait for the remaining time in the step
           if ((increment && current_voltage < high_voltage) || (!increment && current_voltage > low_voltage)) {
-            while (micros() - start_time < time_per_step);
+            while (micros() - start_time < time_per_step) if(HWSERIAL.available() > 0) return;
           }
       }
 
       // Toggle the increment flag and decrement segments_left after each segment
       increment = !increment;
+      
   }
-
 }

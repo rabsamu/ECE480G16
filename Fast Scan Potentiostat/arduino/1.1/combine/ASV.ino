@@ -1,4 +1,4 @@
-
+#define HWSERIAL Serial5
 void ASV(float args[16]) {
   // Remove delays and prints for max speed
   float gain_val = args[1];
@@ -18,33 +18,28 @@ void ASV(float args[16]) {
   unsigned long time_per_step = (unsigned long)(1000000.0 / (sample_rate * total_steps)); // Time per step in microseconds
   bool increment = true; // Flag to toggle between incrementing and decrementing
 
-  setFilter(80);
-  delay(10000);
-  setFilter(0);
-
   openValve();
   setSolution(80);
   setBuffer(80);
   
   setVoltage(hold_voltage1);
   if (hold_time1 > 0) {
-    Serial.println("Holding at pre-clean voltage");
-    delay(hold_time1*1000);
+    if(waitSeconds(hold_time1)) return;
   }
   
   setVoltage(hold_voltage2);
   if (hold_time2 > 0) {
-    Serial.println("Holding at concentration voltage");
-    delay(hold_time2 * 1000);
+    if(waitSeconds(hold_time2)) return;
   }
+  
   closeValve();
-  delay(500);
+  if(waitSeconds(0.5)) return;
   setSolution(0);
   setBuffer(0);
 
   setVoltage(low_voltage);
   float current_voltage = low_voltage;
-  delay(100);
+  if(waitSeconds(0.1)) return;
   while (current_voltage <= high_voltage) {
       unsigned long start_time = micros();
       setVoltage(current_voltage);
@@ -60,15 +55,15 @@ void ASV(float args[16]) {
       Serial.println(avg_current);
 
       // Wait for the remaining time in the step
-      while (micros() - start_time < time_per_step);
+      while (micros() - start_time < time_per_step) if(HWSERIAL.available() > 0) return;
       current_voltage += voltage_increment;
   }
 
   openValve();
   setBuffer(80);
-  delay(5000);
+  if(waitSeconds(5)) return;
   setBuffer(0);
-  delay(2000);
+  if(waitSeconds(2)) return;
   closeValve();
 
 }

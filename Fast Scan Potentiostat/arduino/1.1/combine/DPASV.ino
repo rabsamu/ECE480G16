@@ -15,30 +15,17 @@ void DPASV(float args[16]) {
   int num_increments = floor((high_voltage - low_voltage) / increment_voltage);
   float current = 0;
   
-  Serial.println("Hold1");
   setVoltage(hold_voltage1);
-  for (int i = 0; i < hold_time1*1000; i += 100) {
-    delay(100);
-    current = readCurrent(gain_val);
-    Serial.print(i);
-    Serial.print(",");
-    Serial.println(current);
+  if (hold_time1 > 0) {
+    if(waitSeconds(hold_time1)) return;
   }
   
-  delay(100);
-  Serial.println("Hold2");
   setVoltage(hold_voltage2);
-  for (int i = 0; i < hold_time2*1000; i += 100) {
-    delay(100);
-    current = readCurrent(gain_val);
-    Serial.print(i);
-    Serial.print(",");
-    Serial.println(current);
+  if (hold_time2 > 0) {
+    if(waitSeconds(hold_time2)) return;
   }
-  delay(100);
 
-  Serial.println("hold");
-  delay(100);
+  if(waitSeconds(0.1)) return;
   
   setVoltage(low_voltage);
   float current_voltage = low_voltage;
@@ -50,15 +37,15 @@ void DPASV(float args[16]) {
     
     
     i1 = measureCurrent(pulse_width, sample_width, gain_val);
+    if(i1 == 0xFFFFFFFF) return;
     
     current_voltage = current_voltage - pulse_voltage + increment_voltage;
     
     setVoltage(current_voltage);
     i2 = measureCurrent(pulse_period, sample_width, gain_val);
+    if(i2 == 0xFFFFFFFF) return;
     Serial.print(current_voltage);
     Serial.print(",");
-    Serial.print(i1);
-    Serial.print(',');
-    Serial.println(i2);
+    Serial.println(i1-i2);
   }
 }

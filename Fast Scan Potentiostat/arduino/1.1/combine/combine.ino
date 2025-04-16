@@ -3,7 +3,7 @@
 #include <teensy_clock.h>
 
 // Constant definitions
-#define HWSERIAL Serial1
+#define HWSERIAL Serial5
 #define DAC_CS 10
 #define ADC_CS 9
 #define MUX1_LINE 8
@@ -12,10 +12,11 @@
 #define MUX2_LINEB 6 
 #define MUX2_LINEC 5
 
-// FIXME
-#define FILTER_PUMP 0
-#define SOLUTION_PUMP 0
-#define BUFFER_PUMP 0
+
+#define FILTER_PUMP 33
+#define VALVE 34
+#define SOLUTION_PUMP 14
+#define BUFFER_PUMP 15
 
 int OVERSAMPLING = 0;
 
@@ -32,6 +33,7 @@ void setup() {
   // Serial
   //  while (!Serial) {} //wait until the connection to the PC is established
   Serial.begin(9600);
+  HWSERIAL.begin(9600);
   SPI.begin();
   delay(100);
 
@@ -41,6 +43,10 @@ void setup() {
   pinMode(MUX1_LINE, OUTPUT);
   pinMode(MUX2_LINEA, OUTPUT);
   pinMode(MUX2_LINEB, OUTPUT);
+  pinMode(FILTER_PUMP, OUTPUT);
+  pinMode(SOLUTION_PUMP, OUTPUT);
+  pinMode(BUFFER_PUMP, OUTPUT);
+  pinMode(VALVE, OUTPUT);
   delay(100);
 
   //for cv, gonna find out if it breaks others
@@ -58,6 +64,7 @@ void setup() {
 
 void loop() {
   bool got_message = false;
+  bool exitCode = false;
   if (HWSERIAL.available() > 0) {
     delay(1000);
 
@@ -70,8 +77,12 @@ void loop() {
     delayMicroseconds(5);
     setGain(args[1]);
     delay(100);
+    Serial.println((int)args[0]);
     
     switch((int)args[0]) {
+      case 0:
+        exitCode = true;
+        break;
       case 1:
         ASV(args);
         break;
@@ -82,26 +93,41 @@ void loop() {
         DPV(args);
         break;
       case 4:
+        Serial.println("Got CV!");
         CV(args);
         break;
+      case 5:
+        runFilter(args);
+        break;
     }
-
-    delay(100);
-    Serial.println("Done!");
-    SPI.endTransaction();
+    if(!exitCode) {
+      delay(100);
+      Serial.println("END");
+      HWSERIAL.println("END");
+      SPI.endTransaction();
+      setVoltage(0);
+      openValve();
+      setBuffer(80);
+      delay(5000);
+      setBuffer(0);
+      delay(2000);
+      closeValve();
+    }
   }
 } 
 void getMessage() {
+  Serial.println("Hello");
   char sz[200];
   char buf[sizeof(sz)];
-  String serialResponse = HWSERIAL.readStringUntil('\r\n');
+  String serialResponse = HWSERIAL.readStringUntil('\n');
+  Serial.println(serialResponse);
   serialResponse.toCharArray(buf, sizeof(buf));
   char *p = buf;
   char *str;
   int iterator_count = 0;
-  while ((str = strtok_r(p, ", ", &p)) != NULL) {
-    iterator_count += 1;
+  while ((str = strtok_r(p, ",", &p)) != NULL) {
     args[iterator_count] = atof(str);
+    iterator_count += 1;
   }
 }
 
@@ -113,7 +139,8 @@ void setVoltage(float voltage) {
 }
 
 float readCurrent(float gain_val) {
-  return ((5 * (float)adc.read_value() / (1<<16-1)) - 2.5) * 2 / gain_val;
+  Serial.println(adc.read_value());
+  return (float)(adc.read_value() - 22043) / 21270 * 5 / gain_val;
 }
 
 void setGain(int resistanceGain) 
@@ -177,6 +204,15 @@ void setGain(int resistanceGain)
   }
 }
 
+bool waitSeconds(float seconds) {
+  long timeMicros = (long)(seconds * 1000000);
+  long startTime = micros();
+  while (micros() - startTime < timeMicros) {
+    if(HWSERIAL.available() > 0) return true;
+  }
+  return false;
+}
+
 float measureCurrent(float pulse, float sample_width, float gain_val) {
   float total = 0;
   float how_many = 0;
@@ -188,6 +224,7 @@ float measureCurrent(float pulse, float sample_width, float gain_val) {
   
   while (std::chrono::duration_cast<micros_f>(timenew - timeold).count() <= 1000000 * pulse) {
     timenew = teensy_clock::now();
+    if(HWSERIAL.available() > 0) return 0xFFFFFFFF;
     if (std::chrono::duration_cast<micros_f>(timenew - timeold).count() >= sample_width * 1000000) {
       if (std::chrono::duration_cast<micros_f>(timenew - timeold).count() >= next_measurement_time) {
         if (how_many <= OVERSAMPLING) {
@@ -201,20 +238,20 @@ float measureCurrent(float pulse, float sample_width, float gain_val) {
   return total / how_many;
 }
 
-void setFilter(int percent) {
+void setFilter(float percent) {
   setMotor(FILTER_PUMP, percent);
 }
 
-void setSolution(int percent) {
+void setSolution(float percent) {
   setMotor(SOLUTION_PUMP, percent);
 }
 
-void setBuffer(int percent) {
+void setBuffer(float percent) {
   setMotor(BUFFER_PUMP, percent);
 }
 
-void setMotor(int pinNum, int percent) {
-  int scaledVal = percent / 100 * 255;
+void setMotor(int pinNum, float percent) {
+  int scaledVal = (int)(percent / 100 * 255);
   analogWrite(pinNum, scaledVal);
 }
 
