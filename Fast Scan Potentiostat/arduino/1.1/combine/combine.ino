@@ -15,8 +15,8 @@
 
 #define FILTER_PUMP 33
 #define VALVE 34
-#define SOLUTION_PUMP 14
-#define BUFFER_PUMP 15
+#define SOLUTION_PUMP 15
+#define BUFFER_PUMP 14
 
 int OVERSAMPLING = 0;
 
@@ -81,6 +81,7 @@ void loop() {
     
     switch((int)args[0]) {
       case 0:
+        Serial.println("Yessir!!!");
         exitCode = true;
         break;
       case 1:
@@ -98,21 +99,28 @@ void loop() {
         break;
       case 5:
         runFilter(args);
+        Serial.println("END");
+        HWSERIAL.println("END");
+        exitCode = true;
         break;
     }
     if(!exitCode) {
-      delay(100);
-      Serial.println("END");
-      HWSERIAL.println("END");
-      SPI.endTransaction();
-      setVoltage(0);
+      
+      // flush the system with buffer
       openValve();
       setBuffer(80);
       delay(5000);
       setBuffer(0);
       delay(2000);
       closeValve();
+      Serial.println("END");
+      HWSERIAL.println("END");
+      SPI.endTransaction();
+      
     }
+    setVoltage(0);
+    delay(100);
+    
   }
 } 
 void getMessage() {
@@ -204,6 +212,8 @@ void setGain(int resistanceGain)
   }
 }
 
+
+// custom wait function with interuption from bluetooth
 bool waitSeconds(float seconds) {
   long timeMicros = (long)(seconds * 1000000);
   long startTime = micros();

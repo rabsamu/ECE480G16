@@ -16,6 +16,10 @@ void DPV(float args[16]) {
   int num_increments = floor((high_voltage - low_voltage) / increment_voltage);
 
   float current = 0;
+
+  openValve();
+  setSolution(80);
+  setBuffer(80);
   
   setVoltage(hold_voltage1);
   if (hold_time1 > 0) {
@@ -26,6 +30,11 @@ void DPV(float args[16]) {
   if (hold_time2 > 0) {
     if(waitSeconds(hold_time2)) return;
   }
+
+  closeValve();
+  if(waitSeconds(0.5)) return;
+  setSolution(0);
+  setBuffer(0);
   
   delay(100);
   setVoltage(low_voltage);
@@ -45,8 +54,11 @@ void DPV(float args[16]) {
     
     Serial.print(current_voltage);
     Serial.print(",");
-    Serial.print(i1);
-    Serial.print(',');
-    Serial.println(i2);
+    Serial.println(i1-i2, 12);
+    HWSERIAL.print(current_voltage);
+    HWSERIAL.print(",");
+    HWSERIAL.println(i1-i2, 12);
+    
+
   }
 }

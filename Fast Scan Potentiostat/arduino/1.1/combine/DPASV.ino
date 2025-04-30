@@ -14,6 +14,10 @@ void DPASV(float args[16]) {
     
   int num_increments = floor((high_voltage - low_voltage) / increment_voltage);
   float current = 0;
+
+  openValve();
+  setSolution(80);
+  setBuffer(80);
   
   setVoltage(hold_voltage1);
   if (hold_time1 > 0) {
@@ -25,7 +29,11 @@ void DPASV(float args[16]) {
     if(waitSeconds(hold_time2)) return;
   }
 
-  if(waitSeconds(0.1)) return;
+  // stop flow and take measurement
+  closeValve();
+  if(waitSeconds(0.5)) return;
+  setSolution(0);
+  setBuffer(0);
   
   setVoltage(low_voltage);
   float current_voltage = low_voltage;

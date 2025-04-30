@@ -1,5 +1,7 @@
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
+import time
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +16,10 @@ class ResultsScreen(Screen):
     def start_process(self):
         self.data_x = []
         self.data_y = []
+        self.data_x.clear()
+        self.data_y.clear()
         self.event = Clock.schedule_interval(self.process, 0.02)
+        self.INSTANCE.settings.layout.lowerBar.words.text = "Running Pumps"
 
     def process(self, dt):
         data_string = self.INSTANCE.bluetooth.BluetoothReceive()
@@ -41,3 +46,11 @@ class ResultsScreen(Screen):
 
     def stop_process(self):
         self.event.cancel()
+
+    def save_results(self):
+        with open("results.csv", "w") as f:
+            f.write("Voltage, Current\n")
+            for i in range(len(self.data_x)):
+                f.write(f"{self.data_x[i]}, {self.data_y[i]}\n")
+            f.close()
+        self.layout.topBar.mytext.text = os.getcwd()

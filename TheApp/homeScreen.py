@@ -6,9 +6,9 @@ class HomeScreen(Screen):
     INSTANCE = None
 
     def save_settings(self):
-        with open("configs.txt", "wb") as f:
+        with open("configs.pickle", "wb") as f:
             pickle.dump(self.INSTANCE.data, f)
 
     def load_settings(self):
-        with open("configs.txt", "rb") as f:
+        with open("configs.pickle", "rb") as f:
             self.INSTANCE.data = pickle.load(f)

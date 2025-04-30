@@ -3,6 +3,8 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.dropdown import DropDown
+from kivy.uix.button import Button
 
 class SettingsScreen(Screen):
     
@@ -12,6 +14,12 @@ class SettingsScreen(Screen):
         "asv" : ["gain", "low voltage", "times to sample", "time 1", "voltage 1", "time 2", "voltage 2", "sample rate"],
         "dpasv" : ["start voltage", "stop voltage", "voltage 1", "time 1", "voltage 2", "time 2"]
     } 
+    test_param_types = {
+        "asv" : ["gain", "", "", "", "", "", "", ""],
+        "dpasv" : ["start voltage", "stop voltage", "voltage 1", "time 1", "voltage 2", "time 2"]
+    }
+
+    gain_options = []
 
     def load(self,test_type):
         self.mode = test_type
@@ -26,10 +34,27 @@ class SettingsScreen(Screen):
             row = BoxLayout(orientation="horizontal")
             label = Label(text = self.test_param_dict[test_type][i])
             row.add_widget(label)
-            textinput = TextInput()
-            if(not values[i] == 0):
-                textinput.text = (str)(values[i])
-            row.add_widget(textinput)
+            if(self.test_param_types[test_type][i] == "gain"):
+                gainsDropdown = DropDown()
+                for gain in self.gain_options:
+                    btn = Button(text=gain)
+                    btn.bind(on_release=lambda btn: gainsDropdown.select(btn.text))
+
+                    # then add the button inside the dropdown
+                    gainsDropdown.add_widget(btn)
+
+                mainbutton = Button(text='Gain', size_hint=(None, None))
+                mainbutton.bind(on_release=gainsDropdown.open)
+                gainsDropdown.bind(on_select=lambda instance, x: setattr(mainbutton, 'text', x))
+                row.add_widget(mainbutton)
+            else:
+                textinput = TextInput()
+                if(not values[i] == 0):
+                    textinput.text = (str)(values[i])
+                row.add_widget(textinput)
+            
+            
+            
             self.layout.mainContent.paramList.add_widget(row)
 
     def unload(self):

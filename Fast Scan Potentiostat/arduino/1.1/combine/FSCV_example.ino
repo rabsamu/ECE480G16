@@ -10,7 +10,7 @@ void CV(float args[16]) {
   float increment_voltage = args[4]; // 0.1V
   int times_to_sample = (int) args[5]; // 100
   float sample_rate = args[6]; // 
-  float scan_rate = args[7];
+//  float scan_rate = args[7];
   int segments = args[8];
   
   // Calculate the number of steps and time per step
@@ -22,15 +22,16 @@ void CV(float args[16]) {
   setVoltage(low_voltage);
   float current_voltage = low_voltage;
   delay(100);
-
-  openValve();
-  setSolution(75);
-  setBuffer(75);
-  delay(5000);
-
-  closeValve();
-  setSolution(0);
-  setBuffer(0);
+  
+  // Old code that get's enough solution through the system for demonstration, should probably be way shorter
+//  openValve();
+//  setSolution(75);
+//  setBuffer(75);
+//  if (waitSeconds(60)) return;
+//
+//  closeValve();
+//  setSolution(0);
+//  setBuffer(0);
   
   unsigned long run_time = micros();
   for (int i = 0; i < segments; i++) {
@@ -41,12 +42,12 @@ void CV(float args[16]) {
           unsigned long start_time = micros();
           setVoltage(current_voltage);
           float total = 0;
+          
 
           for (int j = 0; j < times_to_sample; j++) {
               float reading = readCurrent(gain_val);
               if(reading == 0xFFFFFFFF) return;
               total += reading;
-              
           }
 
           float avg_current = total / times_to_sample;
@@ -58,7 +59,6 @@ void CV(float args[16]) {
           Serial.print(',');
           Serial.print(avg_current, 12);
           Serial.print("\n");
-//          Serial.println(micros()-run_time);
 
           // Change voltage code based on the increment flag
           if (increment) {
@@ -66,10 +66,19 @@ void CV(float args[16]) {
           } else {
               current_voltage -= increment_voltage;
           }
+          if(HWSERIAL.available() > 0) {
+              Serial.println("aborted");
+              return;
+            }
 
           // Wait for the remaining time in the step
           if ((increment && current_voltage < high_voltage) || (!increment && current_voltage > low_voltage)) {
-            while (micros() - start_time < time_per_step) if(HWSERIAL.available() > 0) return;
+            while (micros() - start_time < time_per_step) {
+              if(HWSERIAL.available() > 0) {
+                Serial.println("aborted");
+                return;
+              }
+            }
           }
       }
 

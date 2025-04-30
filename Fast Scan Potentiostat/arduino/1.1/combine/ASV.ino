@@ -58,12 +58,4 @@ void ASV(float args[16]) {
       while (micros() - start_time < time_per_step) if(HWSERIAL.available() > 0) return;
       current_voltage += voltage_increment;
   }
-
-  openValve();
-  setBuffer(80);
-  if(waitSeconds(5)) return;
-  setBuffer(0);
-  if(waitSeconds(2)) return;
-  closeValve();
-
 }
