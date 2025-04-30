@@ -1,0 +1,54 @@
+<HomeScreen>:
+    layout: layout
+    BoxLayout:
+        id: layout
+        orientation: "vertical"
+        lowerBar: lowerBar
+        mainContent: mainContent
+        
+        BoxLayout:
+            id: topBar
+            orientation: "horizontal"
+            size_hint: (1, 0.2)
+            Label:
+                text: "corner"
+                size_hint: (0.2, 1)
+            Label:
+                text: "Main Banner!"
+        # Main Content
+        BoxLayout:
+            id: mainContent
+            orientation: "vertical"
+
+            Button:
+                text: "ASV"
+                on_release:
+                    app.sm.current = 'settings'
+                    app.settings.load("asv")
+            Button:
+                text: "DP-ASV"
+                on_release:
+                    #app.sm.current = 'settings'
+                    #app.settings.load("dpasv")
+
+        BoxLayout:
+            id: lowerBar
+            orientation: "horizontal"
+            size_hint: (1, 0.2)
+            pos_hint: {'bottom': 1}
+
+            Button:
+                text: "Connect"
+                on_release:
+                    app.bluetooth.getAndroidBluetoothSocket('HC-06')
+
+            Button:
+                text: "Save settings"
+                on_release:
+                    #app.menu.save_settings()
+
+            Button:
+                text: "Load settings"
+                on_release:
+                    #app.menu.load_settings()
+

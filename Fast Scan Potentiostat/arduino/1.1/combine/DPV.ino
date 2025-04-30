@@ -1,43 +1,64 @@
-void DPV(
-  float initialE, float finalE, float incramentE, float pulse_width, float pulse_period, float amplitude, float quiet_time, float sample_width) {
-  float initial_potential = ((initialE / 2.5) + 1) * 8192;
-  float final_potential = ((finalE / 2.5) + 1) * 8192;
-  float incrament_potential = voltageToBytes(incramentE);
-  float raw_amplitude = voltageToBytes(amplitude);
-  delay(quiet_time * 1000);
-  setVoltage(int(round(initial_potential)));
-  adc.read_value();
-  int incraments = floor((final_potential - initial_potential) / incrament_potential);
-  float newE = initial_potential;
-  float base_voltage = initial_potential;
+void DPV(float args[16]) {
+  float gain_val = args[1];
+  float low_voltage = args[2];
+  float high_voltage = args[3];
+  float increment_voltage = args[4];
+  float pulse_width = args[5];
+  float pulse_period = args[6];
+  float pulse_voltage = args[7];
+  float sample_width = args[8];
+  float hold_time1 = args[9];
+  float hold_voltage1 = args[10];
+  float hold_time2 = args[11];
+  float hold_voltage2 = args[12];
+  int oversampling = (int) args[13];
+    
+  int num_increments = floor((high_voltage - low_voltage) / increment_voltage);
+
+  float current = 0;
+
+  openValve();
+  setSolution(80);
+  setBuffer(80);
+  
+  setVoltage(hold_voltage1);
+  if (hold_time1 > 0) {
+    if(waitSeconds(hold_time1)) return;
+  }
+  
+  setVoltage(hold_voltage2);
+  if (hold_time2 > 0) {
+    if(waitSeconds(hold_time2)) return;
+  }
+
+  closeValve();
+  if(waitSeconds(0.5)) return;
+  setSolution(0);
+  setBuffer(0);
+  
+  delay(100);
+  setVoltage(low_voltage);
+  float current_voltage = low_voltage;
   float i1;
   float i2;
-  sample_width = sample_width;  // now in milliseconds
-  for (int i = 0; i < incraments; i++) {
-    newE = int(round(newE + raw_amplitude));
-    setVoltage(newE);
+  for (int i = 0; i < num_increments; i++) {
+    current_voltage = current_voltage + pulse_voltage;
+    setVoltage(current_voltage);
     
-    base_voltage = newE;
+    i1 = measureCurrent(pulse_width, sample_width, gain_val);
     
-    i1 = measure(pulse_width, sample_width);
-    // delay(pulse_width);
-    // i1 = adc.read_value();
-    
-    newE = int(round(newE - (raw_amplitude - incrament_potential)));
-    
-    // Serial.print(newE);
-    // Serial.print(",");
-    
-    setVoltage(newE);
+    current_voltage = current_voltage - pulse_voltage + increment_voltage;
+    setVoltage(current_voltage);
     //measure with new voltage
-    // delay(pulse_period);
-    // i2 = adc.read_value();
-    i2 = measure(pulse_period, sample_width);
-    // Serial.print(base_voltage);
-    Serial.print(newE);
+    i2 = measureCurrent(pulse_period, sample_width, gain_val);
+    
+    Serial.print(current_voltage);
     Serial.print(",");
-    Serial.print(i1);
-    Serial.print(',');
-    Serial.println(i2);
+    Serial.println(i1-i2, 12);
+    HWSERIAL.print(current_voltage);
+    HWSERIAL.print(",");
+    HWSERIAL.println(i1-i2, 12);
+    
+
   }
 }

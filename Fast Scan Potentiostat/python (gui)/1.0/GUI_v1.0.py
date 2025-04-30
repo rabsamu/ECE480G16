@@ -64,10 +64,6 @@ class MainUI(QtWidgets.QMainWindow):
 
         '''###### DATA PARAMETERS ######'''
 
-        # self.communicate = Communicate()
-        # self.communicate.update_s.connect(lambda: self.test(0))
-        # self.communicate.update_v.connect(lambda: self.test(1))
-
 
         # data storage lists
         self.calibration_data_gather_list = []
@@ -379,43 +375,6 @@ class MainUI(QtWidgets.QMainWindow):
 
     def instantiate_dpv_plot(self):
         # # helper function to instantiate calibration plot
-        
-        # self.plot_widget_dpv = pg.PlotWidget(background='#CCCCCC')
-        # self.dpv_data_item = pg.PlotDataItem(pen=pg.mkPen(color='#FCA311',width=3))
-
-        # # add the data item to the plot widget
-        # self.plot_widget_dpv.addItem(self.dpv_data_item)
-
-        # # create and add the legend to the plot widget
-        # self.dpv_legend = pg.LegendItem(offset=(70, 30))
-        # # set legend font size and color
-        # self.dpv_legend.setLabelTextColor('#1E3D59')
-        # self.dpv_legend.setParentItem(self.plot_widget_cv.graphicsItem())
-        # # set legends to data items
-        # #self.cv_legend.addItem(self.cv_data_item, 'Measured CV data')
-        # # label and layout setup and adding plotWidget to layout
-        # label_style = {"font-size": "18pt"}
-        # self.plot_widget_dpv.setLabel('left', 'Current',units='A', **label_style)
-        # self.plot_widget_dpv.setLabel('bottom', 'Potential', units='V', **label_style)
-
-
-        # # Customize the tick labels
-        # tick_font = QtGui.QFont()
-        # tick_font.setPointSize(14)  # Set the desired font size for the tick labels
-
-        # # Apply the tick font to both axes
-        # for axis in ['left', 'bottom']:
-        #     ax = self.plot_widget_dpv.getAxis(axis)
-        #     ax.setTickFont(tick_font)
-
-
-        # self.plot_layout_dpv = QtWidgets.QGridLayout(self.dpv_plot_widget_container)
-        # self.plot_layout_dpv.setContentsMargins(20, 30, 30, 20)
-        # self.plot_layout_dpv.addWidget(self.plot_widget_dpv)
-        # self.plot_widget_dpv.getAxis('left').setTextPen('#1E3D59')
-        # self.plot_widget_dpv.getAxis('left').setPen('#1E3D59')
-        # self.plot_widget_dpv.getAxis('bottom').setTextPen('#1E3D59')
-        # self.plot_widget_dpv.getAxis('bottom').setPen('#1E3D59')
 
         self.plot_widget_dpv = pg.PlotWidget(background='#CCCCCC')
         self.dpv_data_item = pg.PlotDataItem(pen=pg.mkPen(color='#FCA311',width=3))
@@ -544,15 +503,18 @@ class MainUI(QtWidgets.QMainWindow):
         #if self.check_DPV():
 
             self.write_to_console_log("Running DPV experiment...")
-            command = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},".format(3, self.dpv_gain_combo_box.currentText(),
+            command = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}".format(3, self.dpv_gain_combo_box.currentText(),
                                                                     self.dpv_initial_potential.text(),
                                                                     self.dpv_final_potential.text(),
                                                                     self.dpv_increment_potential.text(),
                                                                     self.dpv_pulse_width.text(), 
                                                                     self.dpv_pulse_period.text(),
                                                                     self.dpv_amplitude.text(),
-                                                                    self.dpv_quiet_time.text(),
                                                                     self.dpv_sample_width.text(),
+                                                                    self.dpv_hold_time1.text(),
+                                                                    self.dpv_hold_voltage1.text(),
+                                                                    self.dpv_hold_time1.text(),
+                                                                    self.dpv_hold_voltage1.text(),
                                                                     self.dpv_oversampling.text())
             
             
@@ -571,15 +533,10 @@ class MainUI(QtWidgets.QMainWindow):
                         try:
                             temp_line = line.decode('UTF-8')
                             temp_line = temp_line.strip()
-                            dpv_applied_code,I1,I2 =  temp_line.split(',')
+                            dpv_applied,I1,I2 =  temp_line.split(',')
+                            dpv_applied = float(dpv_applied)
                             dpv_response = float(I1)-float(I2)
-                            #self.data_points.append( f'{dpv_applied_code},{dpv_response}')
-
-                            gain = float(self.dpv_gain_combo_box.currentText())
-                            dpv_response = ((5 * dpv_response / (2**16-1)) - 2.5) * 2 / gain
-                            dpv_E_f = (float(dpv_applied_code) / 8192 -1) * 2.5
-                            self.add_data(self.dpv_data_queue, [dpv_E_f,dpv_response])
-                            #self.write_to_console_log(temp_line)
+                            self.add_data(self.dpv_data_queue, [dpv_applied,dpv_response])
                         except UnicodeDecodeError:
                             print("Warning: UnicodeDecodeError")
                             continue
@@ -732,31 +689,6 @@ class MainUI(QtWidgets.QMainWindow):
 
     def instantiate_dpasv_plot(self):
         # # helper function to instantiate dpasv plot
-        
-        # self.plot_widget_dpasv = pg.PlotWidget(background='#CCCCCC')
-        # self.dpasv_data_item = pg.PlotDataItem(pen=pg.mkPen(color='#FCA311'))
-
-        # # add the data item to the plot widget
-        # self.plot_widget_dpasv.addItem(self.dpasv_data_item)
-
-        # # create and add the legend to the plot widget
-        # self.dpasv_legend = pg.LegendItem(offset=(70, 30))
-        # # set legend font size and color
-        # self.dpasv_legend.setLabelTextColor('#1E3D59')
-        # self.dpasv_legend.setParentItem(self.plot_widget_dpasv.graphicsItem())
-        # # set legends to data items
-        # self.dpasv_legend.addItem(self.dpasv_data_item, 'Measured DPASV data')
-        # # label and layout setup and adding plotWidget to layout
-        # label_style = {"font-size": "12pt"}
-        # self.plot_widget_dpasv.setLabel('left', 'Current',units='A', **label_style)
-        # self.plot_widget_dpasv.setLabel('bottom', 'Potential', units='V', **label_style)
-        # self.plot_layout_dpasv = QtWidgets.QGridLayout(self.dpasv_plot_widget_container)
-        # self.plot_layout_dpasv.setContentsMargins(20, 30, 30, 20)
-        # self.plot_layout_dpasv.addWidget(self.plot_widget_dpasv)
-        # self.plot_widget_dpasv.getAxis('left').setTextPen('#1E3D59')
-        # self.plot_widget_dpasv.getAxis('left').setPen('#1E3D59')
-        # self.plot_widget_dpasv.getAxis('bottom').setTextPen('#1E3D59')
-        # self.plot_widget_dpasv.getAxis('bottom').setPen('#1E3D59')
 
         self.plot_widget_dpasv = pg.PlotWidget(background='#CCCCCC')
         self.dpasv_data_item = pg.PlotDataItem(pen=pg.mkPen(color='#FCA311',width=3))
@@ -946,24 +878,21 @@ class MainUI(QtWidgets.QMainWindow):
         # if self.check_DPASV():
             
             self.write_to_console_log("Running DPASV experiment...")
-            command = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, ".format(2, self.dpasv_gain_combo_box.currentText(),
+            command = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}".format(2, self.dpasv_gain_combo_box.currentText(),
                                                                     self.dpasv_initial_potential.text(),
                                                                     self.dpasv_final_potential.text(),
                                                                     self.dpasv_increment_potential.text(),
                                                                     self.dpasv_pulse_width.text(), 
                                                                     self.dpasv_pulse_period.text(),
                                                                     self.dpasv_amplitude.text(),
-                                                                    self.dpasv_quiet_time.text(),
                                                                     self.dpasv_sample_width.text(),
                                                                     self.dpasv_hold_time1.text(),
                                                                     self.dpasv_hold_voltage1.text(),
                                                                     self.dpasv_hold_time2.text(),
                                                                     self.dpasv_hold_voltage2.text())
-                                                                    #self.dpasv_oversampling.text())
 
             print(command)
             done = 0
-            
             
             with serial.Serial(self.selected_COM, baudrate=self.baud_rate) as ser:
                 self.data_points = []
@@ -977,55 +906,16 @@ class MainUI(QtWidgets.QMainWindow):
                         if line == b'Done!\r\n':
                             self.dpasv_running2 = False
                             continue
-                        if line == b'hold\r\n': #don't know why this is here (as in for the arduino code)
-                            self.write_to_console_log("Hold")
-                            self.dpasv_data_potential.clear(), self.dpasv_data_response.clear()
-                            for item in self.plot_widget_dpasv.items():
-                                    if isinstance(item, pg.PlotDataItem):
-                                        item.setData(x=[], y=[], clear=True)
-                            self.data_points = []
-                            self.emit_update_signal_v
-                            done = 1
-                            continue
-                        if line == b'Hold1\r\n': #don't know why this is here (as in for the arduino code)
-                            self.write_to_console_log("Holding at " + str(self.dpasv_hold_voltage1.text()) + " for " + str(self.dpasv_hold_time1.text()) + " seconds")
-                            # self.test(0)
-                            continue
-                        if line == b'Hold2\r\n': #don't know why this is here (as in for the arduino code)
-                            self.write_to_console_log("Holding at " + str(self.dpasv_hold_voltage2.text()) + " for " + str(self.dpasv_hold_time2.text()) + " seconds")
-                            self.dpasv_data_potential.clear(), self.dpasv_data_response.clear()
-                            for item in self.plot_widget_dpasv.items():
-                                    if isinstance(item, pg.PlotDataItem):
-                                        item.setData(x=[], y=[], clear=True)
-                            self.data_points = []
-
-                            continue
                         try:
-                            if done:
                                 temp_line = line.decode('UTF-8')
                                 temp_line = temp_line.strip()
-                                dpasv_applied_code,I1,I2 =  temp_line.split(',')
-                                gain = float(self.dpasv_gain_combo_box.currentText())
-                                response_i1 = (((5 * float(I1) / ((2**16)-1)) - 2.5) * 2 ) / gain
-                                response_i2 = (((5 * float(I2) / ((2**16)-1)) - 2.5) * 2 ) / gain
-                                # dpasv_response = response_i2 - response_i1
-                                dpasv_response = response_i1 - response_i2
-                                # dpasv_response = float(I1)-float(I2)
+                                dpasv_applied,I1,I2 =  temp_line.split(',')
+                                dpasv_applied - float(dpasv_applied)
+                                dpasv_response = I1 - I2
                                 
-                                # dpasv_response = (((5 * dpasv_response / ((2**16)-1)) - 2.5) * 2 ) / gain
-                                # dpasv_response = ((5 * dpasv_response / (2**16-1)) - 2.5) * 2
-                                dpasv_E_f = (float(dpasv_applied_code) / 8192 - 1) * 2.5
-                                print(dpasv_E_f,response_i1,response_i2)
-                                self.add_data(self.dpasv_data_queue, [dpasv_E_f,dpasv_response])
-                            else:
-                                
-                                gain = float(self.dpasv_gain_combo_box.currentText())
-                                temp_line = line.decode('UTF-8')
-                                temp_line = temp_line.strip()
-                                time_ms,I =  temp_line.split(',')
-                                time_s = float(time_ms) / 1000
-                                response_i = (((5 * float(I) / ((2**16)-1)) - 2.5) * 2 ) / gain
-                                self.add_data(self.dpasv_data_queue, [time_s,response_i])
+                                print(dpasv_applied,I1,I2)
+                                self.add_data(self.dpasv_data_queue, [dpasv_applied,dpasv_response])
+                            
                         except UnicodeDecodeError:
                             print("Warning: UnicodeDecodeError")
                             continue
@@ -1076,125 +966,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.dpasv_data_item_list.remove(data_item)
         self.dpasv_color_list.remove(self.dpasv_color_list[index])
         self.dpasv_index -= 1
-
-
-    ##### EIS PAGE CODE (UNCODED) #####
-    
-
-    def eis_worker(self):
-
-       # self.cv_data_potential.clear(), self.cv_data_response.clear()
-        #for item in self.plot_widget_cv.items():
-        #        if isinstance(item, pg.PlotDataItem):
-        #            item.setData(x=[], y=[], clear=True)
-
-        # return, and do not start data gather thread if not a valid COM
-
-        if self.check_false_COM():
-            return
-        self.run_eis_button.setEnabled(False)
-        self.eis_open_file_button.setEnabled(False)
-        self.eis_save_file_button.setEnabled(False)
-        self.eis_running = True
-        t3 = Thread(target=self.run_eis)
-        t3.start()
-
-    def run_eis(self):
-        self.write_to_console_log("uncoded")
-
-        # self.write_to_console_log("Running EIS experiment...")
-        # command = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, ".format(2, self.dpasv_gain_combo_box.currentText(),
-        #                                                         self.dpasv_initial_potential.text(),
-        #                                                         self.dpasv_final_potential.text(),
-        #                                                         self.dpasv_increment_potential.text(),
-        #                                                         self.dpasv_pulse_width.text(), 
-        #                                                         self.dpasv_pulse_period.text(),
-        #                                                         self.dpasv_amplitude.text(),
-        #                                                         self.dpasv_quiet_time.text(),
-        #                                                         self.dpasv_sample_width.text(),
-        #                                                         self.dpasv_hold_time1.text(),
-        #                                                         self.dpasv_hold_voltage1.text(),
-        #                                                         self.dpasv_hold_time2.text(),
-        #                                                         self.dpasv_hold_voltage2.text())
-        #                                                         #self.dpasv_oversampling.text())
-
-        # print(command)
-        
-        
-        # with serial.Serial(self.selected_COM, baudrate=self.baud_rate) as ser:
-        #     self.data_points = []
-        #     time.sleep(0.1)
-        #     ser.write(command.encode('UTF-8'))
-        #     time.sleep(0.1)
-        #     self.dpasv_running2 = True
-        #     while self.dpasv_running2:
-        #         line = ser.read(ser.in_waiting)  # binary string
-        #         if line != b'':
-        #             if line == b'Done!\r\n':
-        #                 self.dpasv_running2 = False
-        #                 continue
-        #             if line == b'hold\r\n': #don't know why this is here (as in for the arduino code)
-        #                 self.write_to_console_log("Hold")
-        #                 continue
-        #             try:
-        #                 temp_line = line.decode('UTF-8')
-        #                 temp_line = temp_line.strip()
-        #                 dpasv_applied_code,I1,I2 =  temp_line.split(',')
-        #                 dpasv_response = float(I1)-float(I2)
-        #                 gain = float(self.dpasv_gain_combo_box.currentText())
-        #                 dpasv_response = (((5 * dpasv_response / ((2**16)-1)) - 2.5) * 2 ) / gain
-        #                 # dpasv_response = ((5 * dpasv_response / (2**16-1)) - 2.5) * 2
-        #                 dpasv_E_f = (float(dpasv_applied_code) / 8192 - 1) * 2.5
-        #                 self.add_data(self.dpasv_data_queue, [dpasv_E_f,dpasv_response])
-        #             except UnicodeDecodeError:
-        #                 print("Warning: UnicodeDecodeError")
-        #                 continue
-        #             except ValueError:
-        #                     print("ValueError")
-        #                     print(temp_line)
-        #                     exit()
-
-        # self.dpasv_parameter_values['Initial Potential (V)'] = self.dpasv_initial_potential.text()
-        # self.dpasv_parameter_values['Final Potential (V)'] = self.dpasv_final_potential.text()
-        # self.dpasv_parameter_values['Pulse Width (s)'] = self.dpasv_pulse_width.text()
-        # self.dpasv_parameter_values['Pulse Period (s)'] = self.dpasv_pulse_period.text()
-        # self.dpasv_parameter_values['Amplitude (V)'] = self.dpasv_amplitude.text()
-        # self.dpasv_parameter_values['Increment V (V)'] = self.dpasv_increment_potential.text()
-        # self.dpasv_parameter_values['Sample Width (s)'] = self.dpasv_sample_width.text()
-        # self.dpasv_parameter_values['Hold Time 1 (s)'] = self.dpasv_hold_time1.text()
-        # self.dpasv_parameter_values['Hold Voltage 1 (V)'] = self.dpasv_hold_voltage1.text()
-        # self.dpasv_parameter_values['Hold Time 2 (s)'] = self.dpasv_hold_time2.text()
-        # self.dpasv_parameter_values['Hold Voltage 2 (V)'] = self.dpasv_hold_voltage2.text()
-        # self.dpasv_parameter_values['Oversampling'] = self.dpasv_oversampling.text()
-        # self.dpasv_parameter_values['Additional comments'] = self.dpasv_comments_textEdit.toPlainText()
-
-        # self.auto_save()
-        # self.write_to_console_log("DPASV test complete.")
-        # self.dpasv_running = False
-
-
-    ##### NOISE PAGE CODE (Uncoded) #####
-
-
-    def run_noise(self):
-        self.write_to_console_log("Uncoded lol")
-
-    def noise_worker(self):
-
-       # self.cv_data_potential.clear(), self.cv_data_response.clear()
-        #for item in self.plot_widget_cv.items():
-        #        if isinstance(item, pg.PlotDataItem):
-        #            item.setData(x=[], y=[], clear=True)
-
-        # return, and do not start data gather thread if not a valid COM
-
-        if self.check_false_COM():
-            return
-        self.run_noise_button.setEnabled(False)
-        self.noise_running = True
-        t3 = Thread(target=self.run_noise)
-        t3.start()
-
 
     ##### CV PAGE CODE  ***DONE #####
         
@@ -1332,20 +1103,15 @@ class MainUI(QtWidgets.QMainWindow):
     def run_cv(self):
 
         self.write_to_console_log("Running CV experiment...")
-        command = "4 , {}, {}, {}, {}, {}, {}, {}".format(self.cv_lower_voltage_limit.text(),
+        command = "4, {}, {}, {}, {}, {}, {}, {}, {}".format(self.cv_sensitivity_combo_box.currentText(),
+                                                                self.cv_lower_voltage_limit.text(),
                                                                 self.cv_upper_voltage_limit.text(), 
-                                                                self.cv_number_of_segments.text(),
-                                                                self.cv_sensitivity_combo_box.currentText(),
+                                                                self.cv_increment_voltage.text(),
+                                                                self.cv_times_to_sample.text(),
                                                                 self.cv_sampling_rate.text(),
-                                                                self.cv_scan_rate.text(), 0) #last one is v_step
-        
-        if self.selected_calibration_coefficients == [None, None, None]:
-            command += ", 2, 0, 0, 0"
-        else:
-            command += ",1"
-            command += "," + str(self.selected_calibration_coefficients[0])
-            command += "," + str(self.selected_calibration_coefficients[1])
-            command += "," + str(self.selected_calibration_coefficients[2])
+                                                                self.cv_scan_rate.text(),
+                                                                self.cv_number_of_segments.text())#
+
 
         print(command)
         print("gain: ", self.cv_sensitivity_combo_box.currentText())
@@ -1367,24 +1133,10 @@ class MainUI(QtWidgets.QMainWindow):
                         temp_line = temp_line.strip()
                         temp_line = temp_line.replace('\r', '') 
                         temp_line = temp_line.split('\n')  
-                        cv_applied_hex,cv_response_hex,_ = temp_line[0].split(',')
+                        cv_applied,cv_response,_ = temp_line[0].split(',')
+                        cv_applied = float(cv_applied)
+                        cv_response = float(cv_response)
         
-                        cv_applied_hex = float(cv_applied_hex)
-                        cv_response_hex = float(cv_response_hex)
-                        gain = float(self.cv_sensitivity_combo_box.currentText())
-                        # cv_response = ((5 * cv_response_hex / (2**16-1)) - 2.5) * 2 / gain
-                        # cv_response_decimal = 5 * (cv_response_hex / (2**16-1))
-                        # print(cv_response_decimal)
-                        # cv_response_2_and_a_half = cv_response_decimal - 2.5
-                        # cv_respone_plus_and_mins_5 = cv_response_2_and_a_half * 2
-                        # cv_response_current = cv_respone_plus_and_mins_5 / gain
-                        # cv_response = ( ( (5 * (cv_response_hex / (2**16-1))) - 2.5 ) * 2) / gain
-                        # if gain == 100:
-                        #     cv_response = ( ( (5 * (cv_response_hex / (2**16-1))) - 2.5 ) * 3 + 2.5) / gain - 0.00018768596932936088 - 0.00001
-                        # else:
-                        cv_response = ( ( (5 * (cv_response_hex / (2**16-1))) - 2.5 ) * 3 + 2.5) / gain
-                        cv_applied = (float(cv_applied_hex) / 8192 - 1) * 2.5
-                        # print(cv_response_hex, cv_applied)
                         self.add_data(self.cv_data_queue, [cv_applied, cv_response])
 
                     except UnicodeDecodeError: # When it's not of decoding UTF-8, not nessacary(?) to know when, it just can happen 
@@ -1517,42 +1269,17 @@ class MainUI(QtWidgets.QMainWindow):
 
     def run_asv(self):
 
-        # self.write_to_console_log("Running ASV experiment...")
-        # command = "{}, {}, {}, {}, {}, {}, {}, {}, {}".format(1, self.asv_pre_clean_voltage.text(), -1, self.asv_upper_stripping_voltage.text(),
-        #                                                        self.asv_scan_rate.text(), self.asv_concentration_voltage.text(),
-        #                                                        2, self.asv_sensitivity_combo_box.currentText(),
-        #                                                        self.asv_sampling_rate.text(), self.asv_pre_clean_time.text())
-        # if self.selected_calibration_coefficients == [None, None, None]:
-        #     command += ", 2, 0, 0, 0"
-        # else:
-        #     command += ",1"
-        #     command += "," + str(self.selected_calibration_coefficients[0])
-        #     command += "," + str(self.selected_calibration_coefficients[1])
-        #     command += "," + str(self.selected_calibration_coefficients[2])
-        
-        # command += ", "+ self.asv_concentration_time.text()
-
         self.write_to_console_log("Running ASV experiment...")
         command = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}".format(1, 
+                                                                self.asv_sensitivity_combo_box.currentText(),
                                                                 self.asv_concentration_voltage.text(), 
                                                                 self.asv_upper_stripping_voltage.text(),
-                                                                self.asv_scan_rate.text(),
+                                                                self.asv_times_to_sample.text(),
                                                                 self.asv_pre_clean_time.text(),
                                                                 self.asv_pre_clean_voltage.text(),
                                                                 self.asv_concentration_time.text(),
                                                                 self.asv_concentration_voltage.text(),
-                                                                self.asv_sensitivity_combo_box.currentText(),
                                                                 self.asv_sampling_rate.text())
-        
-        # if self.selected_calibration_coefficients == [None, None, None]:
-        #     command += ", 2, 0, 0, 0"
-        # else:
-        #     command += ",1"
-        #     command += "," + str(self.selected_calibration_coefficients[0])
-        #     command += "," + str(self.selected_calibration_coefficients[1])
-        #     command += "," + str(self.selected_calibration_coefficients[2])
-        
-        # command += ", " + self.asv_concentration_time.text()
 
         print(command)
 
@@ -1560,71 +1287,28 @@ class MainUI(QtWidgets.QMainWindow):
             ser.write(command.encode('UTF-8'))
             asv_running = True
             while asv_running:
-                # line = ser.read(ser.in_waiting)
-                # try:
-                #     lines = line.decode('UTF-8').strip()
-                # except UnicodeDecodeError:
-                #     lines = 'err'
-                #     self.write_to_console_log("UnicodeDecodeError")
-                # if lines != "":
-                #     lines = lines.replace('\r', '')
-                #     lines = lines.split('\n')
-                #     lines = lines[0].split(',')
-                #     if lines is not None:
-                #         try:
-                #             if lines[0] == 'Done!':
-                #                 asv_running = False
-                #                 continue
-                #             if lines[0] == 'Holding at pre-clean voltage':
-                #                 self.write_to_console_log("Holding at " + self.asv_pre_clean_voltage.text() + " V for " + self.asv_pre_clean_time.text() + " seconds")
-                #                 continue
-                #             if lines[0] == 'Holding at concentration voltage':
-                #                 self.write_to_console_log("Holding at " + self.asv_concentration_voltage.text() + " V for " + self.asv_concentration_time.text() + " seconds")
-                #                 continue
-                #             for i in range(0, len(lines)):
-                #                     float(lines[i])
-                #             for i in range(0, len(lines), 2):
-                #                 self.add_data(self.asv_data_queue, [float(lines[i]), float(lines[i+1])])
-                #         except ValueError:
-                #             print("ValueError")
-                #             print(lines)
-                #         except IndexError:
-                            # print("IndexError")
+
                 line = ser.read(ser.in_waiting)
                 if line != b'':
                     if line == b'Done!\r\n':
                         asv_running = False
-                        continue
-                    if line == b'Holding at pre-clean voltage\r\n':
-                        self.write_to_console_log("Holding at " + self.asv_pre_clean_voltage.text() + " V for " + self.asv_pre_clean_time.text() + " seconds")
-                        continue
-                    if line == b'Holding at concentration voltage\r\n':
-                        self.write_to_console_log("Holding at " + self.asv_concentration_voltage.text() + " V for " + self.asv_concentration_time.text() + " seconds")
                         continue
                     try:
                         temp_line = line.decode('UTF-8')
                         temp_line = temp_line.strip()
                         temp_line = temp_line.replace('\r', '') 
                         temp_line = temp_line.split('\n')  
-                        asv_applied_hex,asv_response_hex = temp_line[0].split(',')
+                        asv_applied,asv_response = temp_line[0].split(',')
         
-                        asv_applied_hex = float(asv_applied_hex)
-                        asv_response_hex = float(asv_response_hex )
-                        gain = float(self.asv_sensitivity_combo_box.currentText())
-                        asv_response = ((5 * asv_response_hex / (2**16-1)) - 2.5) * 2 / gain
-                        asv_applied = (float(asv_applied_hex) / 8192 -1) * 2.5
+                        asv_applied = float(asv_applied)
+                        asv_response = float(asv_response)
                         self.add_data(self.asv_data_queue, [asv_applied, asv_response])
 
                     except UnicodeDecodeError: # When it's not of decoding UTF-8, not nessacary(?) to know when, it just can happen 
                         temp_line = 'err'
                         self.write_to_console_log("UnicodeDecodeError")
-                    # except ValueError:
-                    #         print("ValueError")
-                    #         #print(line)
                     except IndexError:
                             print("IndexError")
-
-        
 
         self.asv_parameter_values['Pre clean voltage (V)'] = self.asv_pre_clean_voltage.text()
         self.asv_parameter_values['Pre clean time (s)'] = self.asv_pre_clean_time.text()
@@ -1641,32 +1325,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.asv_running = False
 
     def instantiate_asv_plot(self):
-        # helper function to instantiate calibration plot
-        
-        # self.plot_widget_asv = pg.PlotWidget(background='#CCCCCC')
-        # self.asv_data_item = pg.PlotDataItem(pen=pg.mkPen(color='#FCA311', width=2))
-
-        # # add the data item to the plot widget
-        # self.plot_widget_asv.addItem(self.asv_data_item)
-
-        # # create and add the legend to the plot widget
-        # legend = pg.LegendItem(offset=(70, 30))
-        # # set legend font size and color
-        # legend.setLabelTextColor('#1E3D59')
-        # legend.setParentItem(self.plot_widget_asv.graphicsItem())
-        # # set legends to data items
-        # legend.addItem(self.asv_data_item, 'Measured ASV data')
-        # # label and layout setup and adding plotWidget to layout
-        # label_style = {"font-size": "12pt"}
-        # self.plot_widget_asv.setLabel('left', 'Current',units='A', **label_style)
-        # self.plot_widget_asv.setLabel('bottom', 'Potential', units='V', **label_style)
-        # self.plot_layout_asv = QtWidgets.QGridLayout(self.asv_plot_widget_container)
-        # self.plot_layout_asv.setContentsMargins(20, 30, 30, 20)
-        # self.plot_layout_asv.addWidget(self.plot_widget_asv)
-        # self.plot_widget_asv.getAxis('left').setTextPen('#1E3D59')
-        # self.plot_widget_asv.getAxis('left').setPen('#1E3D59')
-        # self.plot_widget_asv.getAxis('bottom').setTextPen('#1E3D59')
-        # self.plot_widget_asv.getAxis('bottom').setPen('#1E3D59')
 
         self.plot_widget_asv = pg.PlotWidget(background='#CCCCCC')
         self.asv_data_item = pg.PlotDataItem(pen=pg.mkPen(color='#FCA311',width=3))
@@ -1727,8 +1385,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.asv_index -= 1
 
     ##### CALIBRATION PAGE CODE (maybe working idk) #####
-
-
     def run_calibration_test(self):
         self.write_to_console_log("Running calibration test...")
         use_coefficients = True

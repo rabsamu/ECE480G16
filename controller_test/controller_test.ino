@@ -1,120 +1,144 @@
-#define HWSERIAL Serial1
+#include <SD.h>
 
-// Motor A connections
-int enA = 14;
-int in1 = 15;
-int in2 = 16;
-// Motor B connections
-int enB = 19;
-int in3 = 17;
-int in4 = 18;
 
-int directionA = 1;
-int directionB = 1;
+//#define HWSERIAL Serial1
+#define FILTER_PUMP 33
+#define VALVE 34
+#define SOLUTION_PUMP 14
+#define BUFFER_PUMP 15
 
+int runNumber = 0;
 
 void setup() {
   // Set all the motor control pins to outputs
-  pinMode(enA, OUTPUT);
-  pinMode(enB, OUTPUT);
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
-  pinMode(in3, OUTPUT);
-  pinMode(in4, OUTPUT);
-  
-  // Set motors to forwrd - Initial state
-  digitalWrite(enA, 0);
-  digitalWrite(enB, 0);
-  digitalWrite(in1, 1);
-  digitalWrite(in2, 0);
-  digitalWrite(in3, 1);
-  digitalWrite(in4, 0);
+  pinMode(FILTER_PUMP, OUTPUT);
+  pinMode(SOLUTION_PUMP, OUTPUT);
+  pinMode(BUFFER_PUMP, OUTPUT);
+  pinMode(VALVE, OUTPUT);
+//  if(!SD.begin()) {
+//    Serial.println("really bad");
+//  }
+  delay(1000);
+//  openFile();
 
-  HWSERIAL.begin(9600);
+  
+
 }
 
 void loop() {
-  if(HWSERIAL.available() > 0) {
-    char msg = HWSERIAL.read();
-    Serial.println(msg);
-    switch(msg) {
-      case 49:
-        gotoState1();
-        break;
-      case 50:
-        gotoState2();
-        break;
-      case 51:
-        gotoState3();
-        break;
-      case 52:
-        toggleDirection(1);
-        toggleDirection(2);
-        break;
-    }
-  }
+//  Serial.println(runNumber);
+  
+//  setFilter(80);
+//  delay(5000);
+//  setFilter(0);
+//
+//  openValve();
+  setSolution(75);
+  setBuffer(75);
+  delay(5000);
+//
+//  closeValve();
+  setSolution(0);
+  setBuffer(0);
+//
+  delay(5000);
+  
+//  if(Serial.available()) {
+//    char msg = Serial.read();
+//    switch(msg) {
+//      case '1':
+//        blinkLight();
+////        gotoState1();
+//        break;
+//      case '2':
+//        gotoState2();
+//        break;
+//      case '3':
+//        gotoState3();
+//        break;
+//      case '4':
+//        toggleDirection(1);
+//        toggleDirection(2);
+//        break;
+//    }
+//  }
   delay(10);
 }
 
+void openFile() {
+  if(SD.exists("sysinfo.txt")) {
+    Serial.println("old");
+    File logFile = SD.open("sysinfo.txt", FILE_READ);
+    String text = logFile.readStringUntil("\n");
+    runNumber = text.toInt() + 1;
+    Serial.println(runNumber);
+    logFile.close();
+
+    logFile = SD.open("sysinfo.txt", FILE_WRITE);
+    logFile.println(runNumber);
+    logFile.close();
+    
+  } else {
+    Serial.println("new");
+    runNumber = 0;
+    File logFile = SD.open("sysinfo.txt", FILE_READ);
+    if(logFile) {
+      Serial.println("OKAY!!!");
+    } else {
+      Serial.println("Uh oh!");
+    }
+//    logFile.println(runNumber);
+//    logFile.println("Waffle");
+    logFile.close();
+    
+    logFile = SD.open("sysinfo.txt", FILE_READ);
+    String text = logFile.readString();
+//    runNumber = text.toInt() + 1;
+    Serial.println(text);
+    logFile.close();
+    
+  }
+}
+
 void gotoState1() {
-  speedControl(1, 95);
-  speedControl(2, 0);
+  return;
 }
 
 void gotoState2() {
-  speedControl(1, 0);
-  speedControl(2, 95);
+  return;
 }
 
 void gotoState3() {
-  speedControl(1, 0);
-  speedControl(2, 0);
+  return;
 }
 
-void speedControl(int motor, float percent) {
-  int scaledVal = (int) (percent / 100 * 255);
-  if(motor == 1) {
-    analogWrite(enA, scaledVal);
-  } else {
-    analogWrite(enB, scaledVal);
-  }
+void blinkLight() {
+  digitalWrite(13, 1);
+  delay(4000);
+  digitalWrite(13, 0);
 }
 
-void setDirection(int motor, int dir) {
-  if (motor== 1) {
-    directionA = dir;
-    digitalWrite(in1, directionA);
-    digitalWrite(in2, 1-directionA);
-  } else {
-    directionB = dir;
-    digitalWrite(in3, directionB);
-    digitalWrite(in4, 1-directionB);
-  }
+void setFilter(int percent) {
+  setMotor(FILTER_PUMP, percent);
 }
 
-void toggleDirection(int motor) {
-  if (motor == 1) {
-    directionA = 1 - directionA;
-    digitalWrite(in1, directionA);
-    digitalWrite(in2, 1-directionA);
-  } else {
-    directionB = 1 - directionB;
-    digitalWrite(in3, directionB);
-    digitalWrite(in4, 1-directionB);
-  }
+void setSolution(int percent) {
+  setMotor(SOLUTION_PUMP, percent);
 }
 
-// This function lets you control speed of the motors
-void speedCycle() {
-  // Accelerate from zero to maximum speed
-  for (int i = 50; i < 100; i++) {
-    speedControl(1, i);
-    delay(50);
-  }
-  
-  // Decelerate from maximum speed to zero
-  for (int i = 100; i >= 50; --i) {
-    speedControl(1, i);
-    delay(50);
-  }
+void setBuffer(int percent) {
+  setMotor(BUFFER_PUMP, percent);
+}
+
+void setMotor(int pinNum, float percent) {
+  int scaledVal = (int)(percent / 100 * 255);
+  analogWrite(pinNum, scaledVal);
+}
+
+void openValve() {
+  digitalWrite(VALVE, 1);
+}
+
+void closeValve() {
+  digitalWrite(VALVE, 0);
 }

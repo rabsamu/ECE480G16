@@ -1,51 +1,61 @@
-
-void ASV(float low_voltage, float high_voltage, int times_to_sample, float sample_rate, int holding_time,  float holding_voltage, int holding_time2, float holding_voltage2) {
+#define HWSERIAL Serial5
+void ASV(float args[16]) {
   // Remove delays and prints for max speed
-  uint16_t low_voltage_code = (uint16_t)((low_voltage / 2.5 + 1) * 8191.5);
-  uint16_t high_voltage_code = (uint16_t)((high_voltage / 2.5 + 1) * 8191.5);
-  uint16_t voltage_increment_code = 1;
-  uint16_t current_voltage_code = low_voltage_code;
-  uint16_t current_raw_voltage = 0;
-  holding_voltage = ((holding_voltage / 2.5) + 1) * 8192;
-  holding_voltage2 = ((holding_voltage2 / 2.5) + 1) * 8192;
+  float gain_val = args[1];
+  float low_voltage = args[2];
+  float high_voltage = args[3];
+  int times_to_sample = (int) args[4];
+  float hold_time1 = args[5];
+  float hold_voltage1 = args[6];
+  float hold_time2 = args[7];
+  float hold_voltage2 = args[8];
+  float sample_rate = args[9];
+  
+  float voltage_increment = 6.10389e-5;
+  
   // Calculate the number of steps and time per step
-  uint16_t total_steps = abs(high_voltage_code - low_voltage_code) / voltage_increment_code;
+  int total_steps = abs(high_voltage - low_voltage) / voltage_increment;
   unsigned long time_per_step = (unsigned long)(1000000.0 / (sample_rate * total_steps)); // Time per step in microseconds
   bool increment = true; // Flag to toggle between incrementing and decrementing
-  setVoltage(int(round(holding_voltage)));
-  if (holding_time > 0) 
-  {
-    Serial.println("Holding at pre-clean voltage");
-    delay(holding_time*1000);
+
+  openValve();
+  setSolution(80);
+  setBuffer(80);
+  
+  setVoltage(hold_voltage1);
+  if (hold_time1 > 0) {
+    if(waitSeconds(hold_time1)) return;
   }
-  setVoltage(int(round(holding_voltage2)));
-  if (holding_time2 > 0) 
-  {
-    Serial.println("Holding at concentration voltage");
-    delay(holding_time2 * 1000);
+  
+  setVoltage(hold_voltage2);
+  if (hold_time2 > 0) {
+    if(waitSeconds(hold_time2)) return;
   }
-  setVoltage(current_voltage_code);
-  adc.read_value();
-  delay(100);
-    while (current_voltage_code <= high_voltage_code){
-      //Serial.println("good");
-        unsigned long start_time = micros();
-        setVoltage(current_voltage_code);
-        uint32_t total = 0;
+  
+  closeValve();
+  if(waitSeconds(0.5)) return;
+  setSolution(0);
+  setBuffer(0);
 
-        for (int j = 0; j < times_to_sample; j++) {
-            total += adc.read_value();
-        }
+  setVoltage(low_voltage);
+  float current_voltage = low_voltage;
+  if(waitSeconds(0.1)) return;
+  while (current_voltage <= high_voltage) {
+      unsigned long start_time = micros();
+      setVoltage(current_voltage);
+      int total = 0;
 
-        uint16_t measured_value = total / times_to_sample;
-        Serial.print(current_voltage_code);
-        Serial.print(',');
-        Serial.println(measured_value);
+      for (int j = 0; j < times_to_sample; j++) {
+          total += readCurrent(gain_val);
+      }
+      float avg_current = total / times_to_sample;
+      
+      Serial.print(current_voltage);
+      Serial.print(',');
+      Serial.println(avg_current);
 
-        current_voltage_code += voltage_increment_code;
-
-        // Wait for the remaining time in the step
-        while (micros() - start_time < time_per_step);
-    }
-
-} // *
+      // Wait for the remaining time in the step
+      while (micros() - start_time < time_per_step) if(HWSERIAL.available() > 0) return;
+      current_voltage += voltage_increment;
+  }
+}
